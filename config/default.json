@@ -1,0 +1,4 @@
+{
+  "jwtSecret": "It's a secret",
+  "mongoURI": "Ow this is a secret too!"
+}
