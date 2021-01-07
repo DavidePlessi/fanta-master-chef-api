@@ -1,3 +1,4 @@
+const moment = require("moment");
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
@@ -17,7 +18,7 @@ router.post(
     [
       check('number', errorMessages.NumberIsRequired).not().isEmpty(),
       check('editionNumber', errorMessages.EditionNumberIsRequired).not().isEmpty(),
-      check('isOutside', errorMessages.EditionNumberIsRequired).not().isEmpty(),
+      check('isOutside', errorMessages.EditionNumberIsRequired).not().isEmpty()
     ]
   ],
   async (req, res) => {
@@ -29,14 +30,18 @@ router.post(
     const {
       number,
       editionNumber,
-      isOutside
+      isOutside,
+      date,
+      description
     } = req.body
 
     const episodeFields = {};
 
     if (number) episodeFields.number = number;
     if (editionNumber) episodeFields.editionNumber = editionNumber;
-    if (isOutside) episodeFields.isOutside = isOutside;
+    if (isOutside !== undefined && isOutside !== null) episodeFields.isOutside = isOutside;
+    if (date) episodeFields.date = moment(date);
+    if (description) episodeFields.description = description;
 
     try {
       let episode = await Episode.findOne({number, editionNumber});

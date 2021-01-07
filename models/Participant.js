@@ -19,6 +19,9 @@ const ParticipantSchema = new mongoose.Schema({
   eliminated: {
     type: Boolean,
     default: true
+  },
+  imgName: {
+    type: String
   }
 });
 

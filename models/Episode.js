@@ -13,6 +13,11 @@ const EpisodeSchema = new mongoose.Schema({
     type: Boolean,
     required: true
   },
+  date: {
+    type: Date,
+    required: true,
+    default: Date.now
+  },
   mysteryBoxPodium:  [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Participant'
@@ -48,6 +53,9 @@ const EpisodeSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Participant'
   }],
+  description: {
+    type: String
+  }
 });
 
 module.exports = Episode = mongoose.model('Episode', EpisodeSchema);

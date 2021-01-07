@@ -14,8 +14,7 @@ router.post(
   [
     auth,
     [
-      check('name', errorMessages.NameIsRequired).not().isEmpty(),
-      check('lastName', errorMessages.LastNameIsRequired).not().isEmpty()
+      check('name', errorMessages.NameIsRequired).not().isEmpty()
     ]
   ],
   async (req, res) => {
@@ -29,7 +28,8 @@ router.post(
       lastName,
       description,
       eliminated,
-      editionNumber
+      editionNumber,
+      imgName
     } = req.body;
 
     const participantFields = {};
@@ -39,6 +39,7 @@ router.post(
     if(description) participantFields.description = description;
     if(editionNumber) participantFields.editionNumber = editionNumber;
     if(eliminated !== undefined && eliminated !== null) participantFields.eliminated = eliminated;
+    if(imgName) participantFields.imgName = imgName;
 
     try {
       let participant = await Participant.findById(id);
