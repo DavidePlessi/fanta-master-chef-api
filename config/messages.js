@@ -16,6 +16,7 @@ const errorMessages = {
   //Participant 40000
   //User 50000
   UserIdIsRequired: 'FME50001',
+  InvalidCredentials: 'FME50002',
 };
 
 const infoMessages = {
