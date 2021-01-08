@@ -7,6 +7,7 @@ const config = require('config');
 const { check, validationResult } = require('express-validator');
 
 const User = require('../models/User');
+const {errorMessages} = require("../config/messages");
 
 // @route   GET api/auth
 // @desc    Test route
@@ -42,14 +43,14 @@ router.post(
       let user = await User.findOne({ email });
       if (!user) {
         return res.status(400).json({
-          errors: [{ msg: 'Invalid credentials!' }]
+          errorCode: errorMessages.InvalidCredentials
         });
       }
 
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
         return res.status(400).json({
-          errors: [{ msg: 'Invalid credentials!' }]
+          errorCode: errorMessages.InvalidCredentials
         });
       }
 
