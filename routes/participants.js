@@ -20,7 +20,7 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()){
-      return res.status(400).json({errors: errors.array()});
+      return res.status(400).json({ errorCodes: errors.array().map(x => x.msg)  });
     }
     const {
       id,
@@ -58,7 +58,7 @@ router.post(
       res.json(participant);
     } catch (e) {
       console.error(e.message);
-      res.status(500).send(errorMessages.GenericError)
+      res.status(500).json({errorCodes: [errorMessages.GenericError]});
     }
   }
 );
@@ -71,8 +71,8 @@ router.get('/', auth, async(req, res) => {
     const participants = await Participant.find().sort({lastName: -1, name: -1});
     res.json(participants)
   } catch (e) {
-    console.error(e);
-    res.status(500).send(errorMessages.GenericError);
+    console.error(e.message);
+    res.status(500).json({errorCodes: [errorMessages.GenericError]});
   }
 });
 
@@ -83,15 +83,15 @@ router.get('/:id', auth, async (req, res) => {
   try {
     const participant = await Participant.findById(req.params.id);
     if(!participant){
-      return res.status(400).json({errorCode: errorMessages.NotFound});
+      return res.status(400).json({errorCodes: [errorMessages.NotFound]});
     }
     res.json(participant);
   } catch (e) {
-    console.log(e.message);
+    console.error(e.message);
     if(err.kind == 'ObjectId') {
-      return res.status(400).json({errorCode: errorMessages.NotFound});
+      return res.status(400).json({errorCodes: [errorMessages.NotFound]});
     }
-    res.status(500).send(errorMessages.GenericError);
+    res.status(500).json({errorCodes: [errorMessages.GenericError]});
   }
 });
 
@@ -102,16 +102,16 @@ router.delete('/:id', auth, async (req, res) => {
   try {
     const participant = await Participant.findById(req.params.id);
     if(!participant) {
-      return res.status(404).json({errorCode: errorMessages.NotFound});
+      return res.status(404).json({errorCodes: [errorMessages.NotFound]});
     }
     await participant.remove();
     res.json({msg: infoMessages.CorrectlyRemoved});
   } catch (e) {
     console.error(e.message);
     if(err.kind == 'ObjectId') {
-      return res.status(400).json({errorCode: errorMessages.NotFound});
+      return res.status(400).json({errorCodes: [errorMessages.NotFound]});
     }
-    res.status(500).json({errorCode: errorMessages.GenericError});
+    res.status(500).json({errorCodes: [errorMessages.GenericError]});
   }
 });
 

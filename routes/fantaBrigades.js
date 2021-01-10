@@ -3,11 +3,10 @@ const mongoose = require('mongoose');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const {check, validationResult} = require('express-validator');
-const {errorMessages, infoMessages} = require('../config/messages');
+const {errorMessages} = require('../config/messages');
 
 const FantaBrigade = require('../models/FantaBrigade');
 const Participant = require('../models/Participant');
-const User = require('../models/User');
 
 // @route   POST api/fantaBrigades
 // @desc    Create or update a fantaBrigade
@@ -23,7 +22,7 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({errors: errors.array()})
+      return res.status(400).json({ errorCodes: errors.array().map(x => x.msg)  });
     }
 
     let {
@@ -52,8 +51,8 @@ router.post(
 
       res.json(fantaBrigade);
     } catch (e) {
-      console.log(e.message);
-      res.status(500).send(errorMessages.GenericError);
+      console.error(e.message);
+      res.status(500).json({errorCodes: [errorMessages.GenericError]});
     }
   }
 );
@@ -72,8 +71,8 @@ router.get(
       }
       res.json(fantaBrigades);
     } catch (e) {
-      console.log(e.message);
-      res.status(500).send(errorMessages.GenericError);
+      console.error(e.message);
+      res.status(500).json({errorCodes: [errorMessages.GenericError]});
     }
   }
 )
@@ -92,8 +91,8 @@ router.get(
 
       res.json(fantaBrigade);
     } catch (e) {
-      console.log(e.message);
-      res.status(500).send(errorMessages.GenericError);
+      console.error(e.message);
+      res.status(500).json({errorCodes: [errorMessages.GenericError]});
     }
   }
 )

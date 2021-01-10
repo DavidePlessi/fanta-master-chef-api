@@ -17,6 +17,8 @@ const errorMessages = {
   //User 50000
   UserIdIsRequired: 'FME50001',
   InvalidCredentials: 'FME50002',
+  InvalidEmail: 'FME50003',
+  PasswordRequired: 'FME50004',
 };
 
 const infoMessages = {

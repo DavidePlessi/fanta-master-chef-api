@@ -2,10 +2,9 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const {check, validationResult} = require('express-validator');
-const {errorMessages, infoMessages} = require('../config/messages');
+const {errorMessages} = require('../config/messages');
 
 const Deployment = require('../models/Deployment');
-const User = require('../models/User');
 const Episode = require('../models/Episode');
 const Participant = require('../models/Participant');
 const mongoose = require("mongoose");
@@ -26,7 +25,7 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()){
-      return res.status(400).json({errors: errors.array()});
+      return res.status(400).json({ errorCodes: errors.array().map(x => x.msg) });
     }
 
     const {
@@ -41,13 +40,13 @@ router.post(
     deploymentFields.date = Date.now();
 
     const episode = await Episode.findOne({number: episodeNumber, editionNumber: editionNumber});
-    if(!episode) return res.status(404).json({errorCode: errorMessages.NotFound});
+    if(!episode) return res.status(404).json({errorCodes: [errorMessages.NotFound]});
     const episodeId = episode._id;
     deploymentFields.episode = episodeId;
 
     if(participants){
       if(participants.length !== 4)
-        return res.status(400).json({errorCode: errorMessages.ParticipantsNumber});
+        return res.status(400).json({errorCodes: [errorMessages.ParticipantsNumber]});
       deploymentFields.participants = participants.map(x => mongoose.Types.ObjectId(x));
     }
 
@@ -71,7 +70,7 @@ router.post(
       return res.json(deployment);
     } catch (e) {
       console.error(e.message);
-      res.status(500).send(errorMessages.GenericError);
+      res.status(500).json({errorCodes: [errorMessages.GenericError]});
     }
   }
 );
@@ -91,7 +90,7 @@ router.get(
       res.json(deployments);
     } catch (e) {
       console.log(e.message);
-      res.status(500).send(errorMessages.GenericError);
+      res.status(500).json({errorCodes: [errorMessages.GenericError]});
     }
   }
 );
@@ -107,7 +106,7 @@ router.get(
       const episode = await Episode.findOne(
         {number: req.params.episodeNumber, editionNumber: req.params.editionNumber}
       );
-      if(!episode) return res.status(404).json({errorCode: errorMessages.NotFound});
+      if(!episode) return res.status(404).json({errorCodes: [errorMessages.NotFound]});
 
       let deployment = await Deployment.findOne({user: req.user.id, episode: episode._id})
       if(!deployment) {
@@ -118,7 +117,8 @@ router.get(
 
       res.json(deployment);
     } catch (e) {
-
+      console.log(e.message);
+      res.status(500).json({errorCodes: [errorMessages.GenericError]});
     }
   }
 )

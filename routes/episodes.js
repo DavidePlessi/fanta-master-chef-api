@@ -24,7 +24,7 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({errors: errors.array()})
+      return res.status(400).json({ errorCodes: errors.array().map(x => x.msg)  });
     }
 
     const {
@@ -59,8 +59,8 @@ router.post(
 
       res.json(episode);
     } catch (e) {
-      console.log(e.message);
-      res.status(500).send(errorMessages.GenericError);
+      console.error(e.message);
+      res.status(500).json({errorCodes: [errorMessages.GenericError]});
     }
   }
 );
@@ -73,8 +73,8 @@ router.get('/', auth, async (req, res) => {
     const episodes = await Episode.find().sort({editionNumber: -1, number: -1});
     res.json(episodes);
   } catch (e) {
-    console.log(e.message);
-    res.status(500).send(errorMessages.GenericError);
+    console.error(e.message);
+    res.status(500).json({errorCodes: [errorMessages.GenericError]});
   }
 })
 
@@ -90,12 +90,12 @@ router.get('/:editionNumber/:number', auth, async (req, res) => {
 
     const episode = await Episode.findOne({number, editionNumber});
     if(!episode){
-      return res.status(404).json({errorCode: errorMessages.NotFound})
+      return res.status(404).json({errorCodes: [errorMessages.NotFound]})
     }
     res.json(episode);
   } catch (e) {
-    console.log(e.message);
-    res.status(500).send(errorMessages.GenericError);
+    console.error(e.message);
+    res.status(500).json({errorCodes: [errorMessages.GenericError]});
   }
 });
 
@@ -115,7 +115,7 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()){
-      return res.status(400).json({errors: errors.array()})
+      return res.status(400).json({ errorCodes: errors.array().map(x => x.msg)  });
     }
     const {
       editionNumber,
@@ -146,7 +146,7 @@ router.post(
     try {
       let episode = await Episode.findOne({number, editionNumber});
       if(!episode){
-        return res.status(404).json({errorCode: errorMessages.NotFound})
+        return res.status(404).json({errorCodes: [errorMessages.NotFound]})
       }
 
       episode = await Episode.findOneAndUpdate(
@@ -157,8 +157,8 @@ router.post(
 
       res.json(episode);
     } catch (e) {
-      console.log(e.message);
-      res.status(500).send(errorMessages.GenericError);
+      console.error(e.message);
+      res.status(500).json({errorCodes: [errorMessages.GenericError]});
     }
   }
 );
