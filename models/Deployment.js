@@ -13,6 +13,9 @@ const DeploymentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Participant'
   }],
+  results: {
+    type: Object
+  },
   date: {
     type: Date,
     default: Date.now

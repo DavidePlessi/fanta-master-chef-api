@@ -7,6 +7,7 @@ const {errorMessages} = require('../config/messages');
 const Deployment = require('../models/Deployment');
 const Episode = require('../models/Episode');
 const Participant = require('../models/Participant');
+const User = require('../models/User');
 const mongoose = require("mongoose");
 
 // @route   POST api/deployments
@@ -114,6 +115,7 @@ router.get(
         await deployment.save();
       }
       await populateParticipant(deployment);
+      await populateUser(deployment);
 
       res.json(deployment);
     } catch (e) {
@@ -131,4 +133,10 @@ async function populateParticipant(deployment) {
   }
   deployment.participants = participants;
 }
+async function populateUser(deployment) {
+  const user = await User.findById(deployment.user);
+  if(!user) return;
+  deployment.user = user;
+}
+
 module.exports = router;
