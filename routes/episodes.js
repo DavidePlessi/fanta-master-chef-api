@@ -240,7 +240,8 @@ async function calculateDeploymentResults(deployment, episode) {
   for(let participantInMysteryBoxPodium of participantsInMysteryBoxPodium){
     results.push({
       type: 'ParticipantInMysteryBoxPodium',
-      participant: participantInMysteryBoxPodium
+      participant: participantInMysteryBoxPodium,
+      value: 5
     });
     resultsPoint += 5
   }
@@ -252,7 +253,8 @@ async function calculateDeploymentResults(deployment, episode) {
   if(!!participantWinnerOfMysteryBox) {
     results.push({
       type: 'ParticipantWinnerOfMysteryBox',
-      participant: mongoose.Types.ObjectId(participantWinnerOfMysteryBox)
+      participant: mongoose.Types.ObjectId(participantWinnerOfMysteryBox),
+      value: 10
     });
     resultsPoint += 10
   }
@@ -264,7 +266,8 @@ async function calculateDeploymentResults(deployment, episode) {
   if(!!participantWinnerOfInventionTest){
     results.push({
       type: 'ParticipantWinnerOfInventionTest',
-      participant: mongoose.Types.ObjectId(participantWinnerOfMysteryBox)
+      participant: mongoose.Types.ObjectId(participantWinnerOfMysteryBox),
+      value: 10
     });
     resultsPoint += 10
   }
@@ -275,7 +278,8 @@ async function calculateDeploymentResults(deployment, episode) {
     participantWinnerOfMysteryBox === participantWinnerOfInventionTest){
     results.push({
       type: 'ParticipantWinnerOfMysteryBoxAndInventionTest',
-      participant:  mongoose.Types.ObjectId(participantWinnerOfMysteryBox)
+      participant:  mongoose.Types.ObjectId(participantWinnerOfMysteryBox),
+      value: 20
     });
     resultsPoint += 20;
   }
@@ -289,7 +293,8 @@ async function calculateDeploymentResults(deployment, episode) {
   for(let participantInInventionTestWorst of participantsInInventionTestWorst){
     results.push({
       type: 'ParticipantInInventionTestWorst',
-      participant: participantInInventionTestWorst
+      participant: participantInInventionTestWorst,
+      value: -5
     });
     resultsPoint -= 5
   }
@@ -311,7 +316,8 @@ async function calculateDeploymentResults(deployment, episode) {
       ){
         results.push({
           type: 'ParticipantNotInABrigade',
-          participant: deploymentParticipant
+          participant: deploymentParticipant,
+          value: -10
         });
         resultsPoint -= 10;
       }
@@ -329,14 +335,16 @@ async function calculateDeploymentResults(deployment, episode) {
     if(participantHeadOfRedBrigade) {
       results.push({
         type: 'ParticipantHeadOfRedBrigade',
-        participant: participantHeadOfRedBrigade
+        participant: participantHeadOfRedBrigade,
+        value: 15
       });
       resultsPoint += 15;
     }
     if(participantHeadOfBlueBrigade) {
       results.push({
         type: 'ParticipantHeadOfBlueBrigade',
-        participant: participantHeadOfBlueBrigade
+        participant: participantHeadOfBlueBrigade,
+        value: 15
       });
       resultsPoint += 15;
     }
@@ -354,7 +362,8 @@ async function calculateDeploymentResults(deployment, episode) {
     for(let participantInWinnerBrigade of participantsInWinnerBrigade){
       results.push({
         type: 'ParticipantInWinnerBrigade',
-        participant: participantInWinnerBrigade
+        participant: participantInWinnerBrigade,
+        value: 10
       });
       resultsPoint += 10
     }
@@ -369,7 +378,8 @@ async function calculateDeploymentResults(deployment, episode) {
   for(let participantInPressureTest of participantsInPressureTest){
     results.push({
       type: 'ParticipantInPressureTest',
-      participant: participantInPressureTest
+      participant: participantInPressureTest,
+      value: -5
     });
     resultsPoint -= 5
   }
@@ -383,7 +393,8 @@ async function calculateDeploymentResults(deployment, episode) {
   for(let participantEliminated of participantsEliminated){
     results.push({
       type: 'ParticipantEliminated',
-      participant: participantEliminated
+      participant: participantEliminated,
+      value: -15
     });
     resultsPoint -= 15;
 
