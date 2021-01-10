@@ -241,7 +241,8 @@ async function calculateDeploymentResults(deployment, episode) {
     results.push({
       type: 'ParticipantInMysteryBoxPodium',
       participant: participantInMysteryBoxPodium,
-      value: 5
+      value: 5,
+      participantName: (await Participant.findById(participantInMysteryBoxPodium)).name
     });
     resultsPoint += 5
   }
@@ -254,7 +255,8 @@ async function calculateDeploymentResults(deployment, episode) {
     results.push({
       type: 'ParticipantWinnerOfMysteryBox',
       participant: mongoose.Types.ObjectId(participantWinnerOfMysteryBox),
-      value: 10
+      value: 10,
+      participantName: (await Participant.findById(mongoose.Types.ObjectId(participantWinnerOfMysteryBox))).name
     });
     resultsPoint += 10
   }
@@ -266,8 +268,9 @@ async function calculateDeploymentResults(deployment, episode) {
   if(!!participantWinnerOfInventionTest){
     results.push({
       type: 'ParticipantWinnerOfInventionTest',
-      participant: mongoose.Types.ObjectId(participantWinnerOfMysteryBox),
-      value: 10
+      participant: mongoose.Types.ObjectId(participantWinnerOfInventionTest),
+      value: 10,
+      participantName: (await Participant.findById(mongoose.Types.ObjectId(participantWinnerOfInventionTest))).name
     });
     resultsPoint += 10
   }
@@ -279,7 +282,8 @@ async function calculateDeploymentResults(deployment, episode) {
     results.push({
       type: 'ParticipantWinnerOfMysteryBoxAndInventionTest',
       participant:  mongoose.Types.ObjectId(participantWinnerOfMysteryBox),
-      value: 20
+      value: 20,
+      participantName: (await Participant.findById(mongoose.Types.ObjectId(participantWinnerOfMysteryBox))).name
     });
     resultsPoint += 20;
   }
@@ -294,7 +298,8 @@ async function calculateDeploymentResults(deployment, episode) {
     results.push({
       type: 'ParticipantInInventionTestWorst',
       participant: participantInInventionTestWorst,
-      value: -5
+      value: -5,
+      participantName: (await Participant.findById(participantInInventionTestWorst)).name
     });
     resultsPoint -= 5
   }
@@ -316,8 +321,9 @@ async function calculateDeploymentResults(deployment, episode) {
       ){
         results.push({
           type: 'ParticipantNotInABrigade',
-          participant: deploymentParticipant,
-          value: -10
+          participant: mongoose.Types.ObjectId(deploymentParticipant),
+          value: -10,
+          participantName: (await Participant.findById(mongoose.Types.ObjectId(deploymentParticipant))).name
         });
         resultsPoint -= 10;
       }
@@ -335,16 +341,18 @@ async function calculateDeploymentResults(deployment, episode) {
     if(participantHeadOfRedBrigade) {
       results.push({
         type: 'ParticipantHeadOfRedBrigade',
-        participant: participantHeadOfRedBrigade,
-        value: 15
+        participant: mongoose.Types.ObjectId(participantHeadOfRedBrigade),
+        value: 15,
+        participantName: (await Participant.findById(mongoose.Types.ObjectId(participantHeadOfRedBrigade))).name
       });
       resultsPoint += 15;
     }
     if(participantHeadOfBlueBrigade) {
       results.push({
         type: 'ParticipantHeadOfBlueBrigade',
-        participant: participantHeadOfBlueBrigade,
-        value: 15
+        participant: mongoose.Types.ObjectId(participantHeadOfBlueBrigade),
+        value: 15,
+        participantName: (await Participant.findById(mongoose.Types.ObjectId(participantHeadOfBlueBrigade))).name
       });
       resultsPoint += 15;
     }
@@ -363,7 +371,8 @@ async function calculateDeploymentResults(deployment, episode) {
       results.push({
         type: 'ParticipantInWinnerBrigade',
         participant: participantInWinnerBrigade,
-        value: 10
+        value: 10,
+        participantName: (await Participant.findById(participantInWinnerBrigade)).name
       });
       resultsPoint += 10
     }
@@ -379,7 +388,8 @@ async function calculateDeploymentResults(deployment, episode) {
     results.push({
       type: 'ParticipantInPressureTest',
       participant: participantInPressureTest,
-      value: -5
+      value: -5,
+      participantName: (await Participant.findById(participantInPressureTest)).name
     });
     resultsPoint -= 5
   }
@@ -394,7 +404,8 @@ async function calculateDeploymentResults(deployment, episode) {
     results.push({
       type: 'ParticipantEliminated',
       participant: participantEliminated,
-      value: -15
+      value: -15,
+      participantName: (await Participant.findById(participantEliminated)).name
     });
     resultsPoint -= 15;
 
