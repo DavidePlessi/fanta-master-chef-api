@@ -358,23 +358,25 @@ async function calculateDeploymentResults(deployment, episode) {
     }
 
     //Persona nella brigata vincitrice
-    const winnerBrigade = episode.redBrigadeWins
-      ? episodeDoc.redBrigade
-      : episodeDoc.blueBrigade;
+    if(episode.redBrigadeWins !== undefined){
+      const winnerBrigade = episode.redBrigadeWins
+        ? episodeDoc.redBrigade
+        : episodeDoc.blueBrigade;
 
-    const participantsInWinnerBrigade = _.intersectionWith(
-      deployment.participants,
-      winnerBrigade,
-      _.isEqual
-    );
-    for(let participantInWinnerBrigade of participantsInWinnerBrigade){
-      results.push({
-        type: 'ParticipantInWinnerBrigade',
-        participant: participantInWinnerBrigade,
-        value: 10,
-        participantName: (await Participant.findById(participantInWinnerBrigade)).name
-      });
-      resultsPoint += 10
+      const participantsInWinnerBrigade = _.intersectionWith(
+        deployment.participants,
+        winnerBrigade,
+        _.isEqual
+      );
+      for(let participantInWinnerBrigade of participantsInWinnerBrigade){
+        results.push({
+          type: 'ParticipantInWinnerBrigade',
+          participant: participantInWinnerBrigade,
+          value: 10,
+          participantName: (await Participant.findById(participantInWinnerBrigade)).name
+        });
+        resultsPoint += 10
+      }
     }
   }
 
