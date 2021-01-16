@@ -93,6 +93,7 @@ router.get('/:editionNumber/:number', auth, async (req, res) => {
     } = req.params
 
     const episode = await Episode.findOne({number, editionNumber});
+    await populateParticipants(episode);
     if (!episode) {
       return res.status(404).json({errorCodes: [errorMessages.NotFound]})
     }
@@ -424,6 +425,19 @@ async function calculateDeploymentResults(deployment, episode) {
     results,
     resultsPoint
   }
+}
+
+async function populateParticipants(episode) {
+  const participants = await Participant.find();
+  const findParticipant = (partId) =>  participants.find(x => x._id.toString() === partId.toString());
+  episode.mysteryBoxPodium = episode.mysteryBoxPodium.map(findParticipant);
+  episode.mysteryBoxWorst = episode.mysteryBoxWorst.map(findParticipant);
+  episode.inventionTestPodium = episode.inventionTestPodium.map(findParticipant);
+  episode.inventionTestWorst = episode.inventionTestWorst.map(findParticipant);
+  episode.redBrigade = episode.redBrigade.map(findParticipant);
+  episode.blueBrigade = episode.blueBrigade.map(findParticipant);
+  episode.pressureTest = episode.pressureTest.map(findParticipant);
+  episode.eliminated = episode.eliminated.map(findParticipant);
 }
 
 module.exports = router;
