@@ -10,6 +10,7 @@ const FantaBrigade = require('../models/FantaBrigade');
 const Participant = require('../models/Participant');
 const Deployment = require('../models/Deployment');
 const User = require('../models/User');
+const Episode = require('../models/Episode');
 
 // @route   POST api/fantaBrigades
 // @desc    Create or update a fantaBrigade
@@ -71,7 +72,7 @@ router.get(
       const fantaBrigades = (await FantaBrigade.find({}));
       for (let fantaBrigade of fantaBrigades) {
         await populateParticipant(fantaBrigade);
-        await populateDeploymentResults(fantaBrigade);
+        await populateWithResults(fantaBrigade);
         await populateName(fantaBrigade);
       }
 
@@ -94,6 +95,8 @@ router.get(
       const fantaBrigade = await FantaBrigade.findOne({user: req.user.id});
 
       await populateParticipant(fantaBrigade);
+      await populateWithResults(fantaBrigade);
+      await populateName(fantaBrigade);
 
       res.json(fantaBrigade);
     } catch (e) {
@@ -122,9 +125,27 @@ async function populateDeploymentResults(fantaBrigade) {
   }, 0);
   fantaBrigade._doc.resultsPoint = resultPoint;
 }
+
 async function populateName(fantaBrigade) {
   const user = await User.findById(fantaBrigade.user);
   fantaBrigade._doc.name = user.name;
+}
+
+async function populateWithResults(fantaBrigade) {
+  let deployments = await Deployment.find({user: fantaBrigade.user});
+  for(let deployment of deployments){
+    await populateDeploymentWithEpisode(deployment);
+  }
+  const resultsList = _.flatten(deployments.map(x => ({...x.results, episodeNumber: x.episode.number})))
+    .filter(x => !!x.results && x.results.length > 0);
+  const resultsPoint = _.sumBy(resultsList, 'resultsPoint');
+  fantaBrigade._doc.results = {
+    results: _.orderBy(resultsList, ['episodeNumber'], ['desc']),
+    resultsPoint
+  }
+}
+async function populateDeploymentWithEpisode(deployment) {
+  deployment.episode = await Episode.findById(deployment.episode);
 }
 
 module.exports = router;

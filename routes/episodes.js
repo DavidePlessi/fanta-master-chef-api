@@ -166,7 +166,7 @@ router.post(
     if (inventionTestWorst) episodeFields.inventionTestWorst = inventionTestWorst;
     if (redBrigade) episodeFields.redBrigade = redBrigade;
     if (blueBrigade) episodeFields.blueBrigade = blueBrigade;
-    if (redBrigadeWins) episodeFields.redBrigadeWins = redBrigadeWins;
+    if (redBrigadeWins !== null && redBrigadeWins !== undefined) episodeFields.redBrigadeWins = redBrigadeWins;
     if (pressureTest) episodeFields.pressureTest = pressureTest;
     if (eliminated) episodeFields.eliminated = eliminated;
 
