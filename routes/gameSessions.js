@@ -66,7 +66,9 @@ router.post(
 // @access  Private
 router.get('/', auth, async(req, res) => {
   try {
-    const gameSessions = await GameSession.find();
+    const gameSessions = await GameSession.find({
+      '_id': { $in: req.user.gameSessions.map(x => mongoose.Types.ObjectId(x))}
+    });
     res.json(gameSessions)
   } catch (e) {
     console.error(e.message);

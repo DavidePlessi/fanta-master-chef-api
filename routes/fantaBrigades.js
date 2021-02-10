@@ -100,6 +100,8 @@ router.get(
   async (req, res) => {
     try {
       const fantaBrigade = await FantaBrigade.findOne({user: req.user.id, gameSession: req.currentGameSessionId});
+      if(!fantaBrigade)
+        return res.status(400).json({errorCodes: [errorMessages.NotFound]});
 
       await populateParticipant(fantaBrigade);
       await populateWithResults(fantaBrigade);
