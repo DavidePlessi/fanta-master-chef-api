@@ -57,7 +57,8 @@ router.post(
       const payload = {
         user: {
           id: user.id
-        }
+        },
+        gameSessions: [...user.gameSessions]
       };
 
       jwt.sign(

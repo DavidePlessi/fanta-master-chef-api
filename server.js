@@ -22,6 +22,7 @@ app.use('/api/fantaBrigades', require('./routes/fantaBrigades'));
 app.use('/api/participants', require('./routes/participants'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/errorLogs', require('./routes/errorLog'));
+app.use('/api/gameSessions', require('./routes/gameSessions'));
 
 
 const PORT = process.env.PORT || 5001;

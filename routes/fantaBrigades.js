@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const router = express.Router();
 const auth = require('../middleware/auth');
+const gameSession = require('../middleware/gameSession');
 const {check, validationResult} = require('express-validator');
 const {errorMessages} = require('../config/messages');
 const _ = require('lodash');
@@ -19,6 +20,7 @@ router.post(
   '/',
   [
     auth,
+    gameSession,
     [
       check('participants', errorMessages.ParticipantsIsRequired).not().isEmpty()
     ]
@@ -37,14 +39,19 @@ router.post(
 
     const fantaBrigadeFields = {};
     fantaBrigadeFields.user = req.user.id;
+    fantaBrigadeFields.gameSession = req.currentGameSessionId;
     if (participants) fantaBrigadeFields.participants = participants
 
     try {
-      let fantaBrigade = await FantaBrigade.findOne({user: req.user.id});
+      let fantaBrigade = await FantaBrigade.findOne(
+        {
+          user: req.user.id,
+          gameSession: req.currentGameSessionId
+        });
 
       if (fantaBrigade) {
         fantaBrigade = await FantaBrigade.findOneAndUpdate(
-          {user: req.user.id},
+          {user: req.user.id, gameSession: req.currentGameSessionId},
           {$set: fantaBrigadeFields},
           {new: true}
         );
@@ -66,10 +73,10 @@ router.post(
 // @access  Private
 router.get(
   '/',
-  auth,
+  [auth, gameSession],
   async (req, res) => {
     try {
-      const fantaBrigades = (await FantaBrigade.find({}));
+      const fantaBrigades = (await FantaBrigade.find({gameSession: req.currentGameSessionId}));
       for (let fantaBrigade of fantaBrigades) {
         await populateParticipant(fantaBrigade);
         await populateWithResults(fantaBrigade);
@@ -89,10 +96,10 @@ router.get(
 // @access  Private
 router.get(
   '/my-brigade',
-  auth,
+  [auth, gameSession],
   async (req, res) => {
     try {
-      const fantaBrigade = await FantaBrigade.findOne({user: req.user.id});
+      const fantaBrigade = await FantaBrigade.findOne({user: req.user.id, gameSession: req.currentGameSessionId});
 
       await populateParticipant(fantaBrigade);
       await populateWithResults(fantaBrigade);

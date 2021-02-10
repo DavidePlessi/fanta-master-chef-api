@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
+const gameSession = require('../middleware/gameSession');
 const {check, validationResult} = require('express-validator');
 const {errorMessages} = require('../config/messages');
 
@@ -17,6 +18,7 @@ router.post(
   '/',
   [
     auth,
+    gameSession,
     [
       check('editionNumber', errorMessages.EpisodeIdIsRequired).not().isEmpty(),
       check('episodeNumber', errorMessages.EpisodeIdIsRequired).not().isEmpty(),
@@ -25,8 +27,8 @@ router.post(
   ],
   async (req, res) => {
     const errors = validationResult(req);
-    if(!errors.isEmpty()){
-      return res.status(400).json({ errorCodes: errors.array().map(x => x.msg) });
+    if (!errors.isEmpty()) {
+      return res.status(400).json({errorCodes: errors.array().map(x => x.msg)});
     }
 
     const {
@@ -38,15 +40,16 @@ router.post(
     const deploymentFields = {};
 
     deploymentFields.user = req.user.id;
+    deploymentFields.gameSession = req.currentGameSessionId;
     deploymentFields.date = Date.now();
 
     const episode = await Episode.findOne({number: episodeNumber, editionNumber: editionNumber});
-    if(!episode) return res.status(404).json({errorCodes: [errorMessages.NotFound]});
+    if (!episode) return res.status(404).json({errorCodes: [errorMessages.NotFound]});
     const episodeId = episode._id;
     deploymentFields.episode = episodeId;
 
-    if(participants){
-      if(participants.length !== 4)
+    if (participants) {
+      if (participants.length !== 4)
         return res.status(400).json({errorCodes: [errorMessages.ParticipantsNumber]});
       deploymentFields.participants = participants.map(x => mongoose.Types.ObjectId(x));
     }
@@ -54,12 +57,17 @@ router.post(
     try {
       let deployment = await Deployment.findOne({
         user: req.user.id,
-        episode: episodeId
+        episode: episodeId,
+        gameSession: req.currentGameSessionId
       });
 
-      if(deployment) {
+      if (deployment) {
         deployment = await Deployment.findOneAndUpdate(
-          {user: req.user.id, episode: episodeId},
+          {
+            user: req.user.id,
+            episode: episodeId,
+            gameSession: req.currentGameSessionId
+          },
           {$set: deploymentFields},
           {new: true}
         )
@@ -81,11 +89,11 @@ router.post(
 // @access  Private
 router.get(
   '/my-deployment',
-  auth,
+  [auth, gameSession],
   async (req, res) => {
     try {
-      const deployments = await Deployment.find({user: req.user.id});
-      for(let deployment of deployments){
+      const deployments = await Deployment.find({user: req.user.id, gameSession: req.currentGameSessionId});
+      for (let deployment of deployments) {
         await populateParticipant(deployment);
       }
       res.json(deployments);
@@ -101,17 +109,21 @@ router.get(
 // @access  Private
 router.get(
   '/:editionNumber/:episodeNumber',
-  auth,
+  [auth, gameSession],
   async (req, res) => {
     try {
       const episode = await Episode.findOne(
         {number: req.params.episodeNumber, editionNumber: req.params.editionNumber}
       );
-      if(!episode) return res.status(404).json({errorCodes: [errorMessages.NotFound]});
+      if (!episode) return res.status(404).json({errorCodes: [errorMessages.NotFound]});
 
-      let deployment = await Deployment.findOne({user: req.user.id, episode: episode._id})
-      if(!deployment) {
-        deployment = new Deployment({episode: episode._id, user: req.user.id});
+      let deployment = await Deployment.findOne({
+        user: req.user.id,
+        episode: episode._id,
+        gameSession: req.currentGameSessionId
+      })
+      if (!deployment) {
+        deployment = new Deployment({episode: episode._id, user: req.user.id, gameSession: req.currentGameSessionId});
         await deployment.save();
       }
       await populateParticipant(deployment);
@@ -125,17 +137,31 @@ router.get(
   }
 )
 
+// router.post(
+//   '/il-manino',
+//   [auth, gameSession],
+//   async (req, res) => {
+//     try{
+//       await Deployment.updateMany(null, {$set: {gameSession: mongoose.Types.ObjectId('60242f7af3e5b841782c02b7')}})
+//       return res.json('OK')
+//     } catch (e) {
+//       return res.status(500).json(e.message);
+//     }
+//   }
+// )
+
 async function populateParticipant(deployment) {
   const participants = [];
-  for(let participantId of deployment.participants){
+  for (let participantId of deployment.participants) {
     const participant = await Participant.findById(participantId);
     participants.push(participant);
   }
   deployment.participants = participants;
 }
+
 async function populateUser(deployment) {
   const user = await User.findById(deployment.user);
-  if(!user) return;
+  if (!user) return;
   deployment.user = user;
 }
 

@@ -14,7 +14,7 @@ module.exports = function(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.jwtSecret || config.get('jwtSecret'));
 
-    req.user = decoded.user;
+    req.user = {...decoded.user, gameSessions: decoded.gameSessions};
     next();
   } catch (err) {
     res.status(401).json({ errorCodes: ['Token is not valid'] });

@@ -2,6 +2,7 @@ const moment = require("moment");
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
+const gameSession = require('../middleware/gameSession');
 const {check, validationResult} = require('express-validator');
 const {errorMessages, infoMessages} = require('../config/messages');
 const _ = require('lodash');
@@ -83,7 +84,7 @@ router.get('/', auth, async (req, res) => {
 })
 
 // @route   GET api/episodes/:editionNumber/:number
-// @desc    Get episode by id
+// @desc    Get episode by edition number and number
 // @access  Private
 router.get('/:editionNumber/:number', auth, async (req, res) => {
   try {
@@ -108,7 +109,7 @@ router.get('/:editionNumber/:number', auth, async (req, res) => {
 // @desc    Get episode by edition number and episode number
 // @access  Private
 router.get('/with-deployment/:editionNumber/:number',
-  auth,
+  [auth, gameSession],
   async (req, res) => {
     try {
       const {
@@ -120,7 +121,12 @@ router.get('/with-deployment/:editionNumber/:number',
       if (!episode) {
         return res.status(404).json({errorCodes: [errorMessages.NotFound]})
       }
-      await populateDeployments(episode, true, true);
+      await populateDeployments(
+        episode,
+        true,
+        true,
+        req.currentGameSessionId
+      );
       res.json(episode);
     } catch (e) {
       console.error(e.message);
@@ -185,11 +191,11 @@ router.post(
 
       const deployments = await Deployment.find({episode: episode._id});
       const deploymentsWithResult = [];
-      for(let deployment of deployments) {
+      for (let deployment of deployments) {
         deploymentsWithResult.push(await Deployment.findByIdAndUpdate(
           deployment._id,
           {$set: {results: await calculateDeploymentResults(deployment, episode)}},
-          {new:  true}
+          {new: true}
         ));
       }
       episode._doc.deployments = deploymentsWithResult;
@@ -201,19 +207,27 @@ router.post(
   }
 );
 
-async function populateDeployments(episode, populateDeploymentWithUser, populateDeploymentWithParticipants) {
-  const deployments = await Deployment.find({episode: episode._id});
-  if(!deployments) return false;
+async function populateDeployments(
+  episode,
+  populateDeploymentWithUser,
+  populateDeploymentWithParticipants,
+  gameSessionId
+) {
+  const deployments = await Deployment.find({
+    episode: episode._id,
+    gameSession: mongoose.Types.ObjectId(gameSessionId)
+  });
+  if (!deployments) return false;
 
-  if(populateDeploymentWithUser){
-    for(let deploymentIndex in deployments){
+  if (populateDeploymentWithUser) {
+    for (let deploymentIndex in deployments) {
       deployments[deploymentIndex].user = await User.findById(deployments[deploymentIndex].user);
     }
   }
-  if(populateDeploymentWithParticipants){
-    for(let deploymentIndex in deployments){
+  if (populateDeploymentWithParticipants) {
+    for (let deploymentIndex in deployments) {
       const participants = [];
-      for(let participantId of deployments[deploymentIndex].participants){
+      for (let participantId of deployments[deploymentIndex].participants) {
         const participant = await Participant.findById(participantId);
         participants.push(participant);
       }
@@ -238,7 +252,7 @@ async function calculateDeploymentResults(deployment, episode) {
     episodeDoc.mysteryBoxPodium,
     _.isEqual
   );
-  for(let participantInMysteryBoxPodium of participantsInMysteryBoxPodium){
+  for (let participantInMysteryBoxPodium of participantsInMysteryBoxPodium) {
     results.push({
       type: 'ParticipantInMysteryBoxPodium',
       participant: participantInMysteryBoxPodium,
@@ -252,7 +266,7 @@ async function calculateDeploymentResults(deployment, episode) {
   const participantWinnerOfMysteryBox = episodeDoc.mysteryBoxPodium.length >= 1
     ? deploymentDoc.participants.map(x => x.toString()).find(x => x === episodeDoc.mysteryBoxPodium[0].toString())
     : null;
-  if(!!participantWinnerOfMysteryBox) {
+  if (!!participantWinnerOfMysteryBox) {
     results.push({
       type: 'ParticipantWinnerOfMysteryBox',
       participant: mongoose.Types.ObjectId(participantWinnerOfMysteryBox),
@@ -266,7 +280,7 @@ async function calculateDeploymentResults(deployment, episode) {
   const participantWinnerOfInventionTest = episodeDoc.inventionTestPodium.length >= 1
     ? deploymentDoc.participants.map(x => x.toString()).find(x => x === episodeDoc.inventionTestPodium[0].toString())
     : null;
-  if(!!participantWinnerOfInventionTest){
+  if (!!participantWinnerOfInventionTest) {
     results.push({
       type: 'ParticipantWinnerOfInventionTest',
       participant: mongoose.Types.ObjectId(participantWinnerOfInventionTest),
@@ -277,12 +291,12 @@ async function calculateDeploymentResults(deployment, episode) {
   }
 
   //Persona vince sia invention test che mystery box
-  if(!!participantWinnerOfMysteryBox &&
+  if (!!participantWinnerOfMysteryBox &&
     !!participantWinnerOfInventionTest &&
-    participantWinnerOfMysteryBox === participantWinnerOfInventionTest){
+    participantWinnerOfMysteryBox === participantWinnerOfInventionTest) {
     results.push({
       type: 'ParticipantWinnerOfMysteryBoxAndInventionTest',
-      participant:  mongoose.Types.ObjectId(participantWinnerOfMysteryBox),
+      participant: mongoose.Types.ObjectId(participantWinnerOfMysteryBox),
       value: 20,
       participantName: (await Participant.findById(mongoose.Types.ObjectId(participantWinnerOfMysteryBox))).name
     });
@@ -295,7 +309,7 @@ async function calculateDeploymentResults(deployment, episode) {
     episode.inventionTestWorst,
     _.isEqual
   );
-  for(let participantInInventionTestWorst of participantsInInventionTestWorst){
+  for (let participantInInventionTestWorst of participantsInInventionTestWorst) {
     results.push({
       type: 'ParticipantInInventionTestWorst',
       participant: participantInInventionTestWorst,
@@ -306,20 +320,20 @@ async function calculateDeploymentResults(deployment, episode) {
   }
 
   // Punteggio esterna
-  if(episode.isOutside &&
+  if (episode.isOutside &&
     episode.redBrigade &&
     episode.redBrigade.length > 0 &&
     episode.blueBrigade &&
     episode.blueBrigade.length > 0
   ) {
     //Persona che non va in esterna
-    for(let deploymentParticipant of deploymentDoc.participants.map(x => x.toString())){
+    for (let deploymentParticipant of deploymentDoc.participants.map(x => x.toString())) {
       const deploymentParticipantObj = await Participant.findById(mongoose.Types.ObjectId(deploymentParticipant));
-      if(!episodeDoc.redBrigade.map(x => x.toString()).includes(deploymentParticipant) &&
+      if (!episodeDoc.redBrigade.map(x => x.toString()).includes(deploymentParticipant) &&
         !episodeDoc.blueBrigade.map(x => x.toString()).includes(deploymentParticipant) &&
         (!deploymentParticipantObj.eliminated ||
           (deploymentParticipantObj.eliminated && episodeDoc.eliminated.map(x => x.toString()).includes(deploymentParticipant)))
-      ){
+      ) {
         results.push({
           type: 'ParticipantNotInABrigade',
           participant: mongoose.Types.ObjectId(deploymentParticipant),
@@ -339,7 +353,7 @@ async function calculateDeploymentResults(deployment, episode) {
       .participants
       .map(x => x.toString())
       .find(x => x === episode.blueBrigade[0].toString());
-    if(participantHeadOfRedBrigade) {
+    if (participantHeadOfRedBrigade) {
       results.push({
         type: 'ParticipantHeadOfRedBrigade',
         participant: mongoose.Types.ObjectId(participantHeadOfRedBrigade),
@@ -348,7 +362,7 @@ async function calculateDeploymentResults(deployment, episode) {
       });
       resultsPoint += 15;
     }
-    if(participantHeadOfBlueBrigade) {
+    if (participantHeadOfBlueBrigade) {
       results.push({
         type: 'ParticipantHeadOfBlueBrigade',
         participant: mongoose.Types.ObjectId(participantHeadOfBlueBrigade),
@@ -359,7 +373,7 @@ async function calculateDeploymentResults(deployment, episode) {
     }
 
     //Persona nella brigata vincitrice
-    if(episode.redBrigadeWins !== undefined){
+    if (episode.redBrigadeWins !== undefined) {
       const winnerBrigade = episode.redBrigadeWins
         ? episodeDoc.redBrigade
         : episodeDoc.blueBrigade;
@@ -369,7 +383,7 @@ async function calculateDeploymentResults(deployment, episode) {
         winnerBrigade,
         _.isEqual
       );
-      for(let participantInWinnerBrigade of participantsInWinnerBrigade){
+      for (let participantInWinnerBrigade of participantsInWinnerBrigade) {
         results.push({
           type: 'ParticipantInWinnerBrigade',
           participant: participantInWinnerBrigade,
@@ -382,12 +396,12 @@ async function calculateDeploymentResults(deployment, episode) {
   }
 
   //Pressure test
-  const participantsInPressureTest =  _.intersectionWith(
+  const participantsInPressureTest = _.intersectionWith(
     deployment.participants,
     episode.pressureTest,
     _.isEqual
   );
-  for(let participantInPressureTest of participantsInPressureTest){
+  for (let participantInPressureTest of participantsInPressureTest) {
     results.push({
       type: 'ParticipantInPressureTest',
       participant: participantInPressureTest,
@@ -403,7 +417,7 @@ async function calculateDeploymentResults(deployment, episode) {
     episode.eliminated,
     _.isEqual
   );
-  for(let participantEliminated of participantsEliminated){
+  for (let participantEliminated of participantsEliminated) {
     results.push({
       type: 'ParticipantEliminated',
       participant: participantEliminated,
@@ -413,7 +427,7 @@ async function calculateDeploymentResults(deployment, episode) {
     resultsPoint -= 15;
 
     const participant = await Participant.findById(participantEliminated);
-    if(participant && !participant.eliminated){
+    if (participant && !participant.eliminated) {
       await Participant.findByIdAndUpdate(
         participantEliminated,
         {$set: {eliminated: true}},
@@ -429,7 +443,7 @@ async function calculateDeploymentResults(deployment, episode) {
 
 async function populateParticipants(episode) {
   const participants = await Participant.find();
-  const findParticipant = (partId) =>  participants.find(x => x._id.toString() === partId.toString());
+  const findParticipant = (partId) => participants.find(x => x._id.toString() === partId.toString());
   episode.mysteryBoxPodium = episode.mysteryBoxPodium.map(findParticipant);
   episode.mysteryBoxWorst = episode.mysteryBoxWorst.map(findParticipant);
   episode.inventionTestPodium = episode.inventionTestPodium.map(findParticipant);

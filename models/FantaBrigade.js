@@ -11,7 +11,11 @@ const FantaBrigadeSchema = new mongoose.Schema({
   }],
   results: [{
     type: Object
-  }]
+  }],
+  gameSession: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'GameSession'
+  }
 });
 
 module.exports = FantaBrigade = mongoose.model('FantaBrigade', FantaBrigadeSchema);

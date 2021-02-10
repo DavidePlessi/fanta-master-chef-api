@@ -19,6 +19,10 @@ const DeploymentSchema = new mongoose.Schema({
   date: {
     type: Date,
     default: Date.now
+  },
+  gameSession: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'GameSession'
   }
 });
 

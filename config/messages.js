@@ -8,6 +8,7 @@ const errorMessages = {
   NumberIsRequired: 'FME00005',
   ParticipantsIsRequired: 'FME00006',
   ParticipantsNumber: 'FME00007',
+  GameSessionIdNotValid: 'FME00008',
   //Deployment 10000
   //Episode 20000
   EpisodeIdIsRequired: 'FME10001',
@@ -19,6 +20,8 @@ const errorMessages = {
   InvalidCredentials: 'FME50002',
   InvalidEmail: 'FME50003',
   PasswordRequired: 'FME50004',
+  //GameSession 60000
+  AdminsIsRequired: 'FME60001'
 };
 
 const infoMessages = {
