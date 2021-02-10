@@ -14,6 +14,9 @@ module.exports = function(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.jwtSecret || config.get('jwtSecret'));
 
+    if(!decoded.gameSessions)
+      return res.status(401).json({ errorCodes: ['No token, authorization denied!'] });
+
     req.user = {...decoded.user, gameSessions: decoded.gameSessions};
     next();
   } catch (err) {
