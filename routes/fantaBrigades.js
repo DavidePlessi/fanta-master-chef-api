@@ -79,7 +79,7 @@ router.get(
       const fantaBrigades = (await FantaBrigade.find({gameSession: req.currentGameSessionId}));
       for (let fantaBrigade of fantaBrigades) {
         await populateParticipant(fantaBrigade);
-        await populateWithResults(fantaBrigade);
+        await populateWithResults(fantaBrigade, req.currentGameSessionId);
         await populateName(fantaBrigade);
       }
 
@@ -140,8 +140,8 @@ async function populateName(fantaBrigade) {
   fantaBrigade._doc.name = user.name;
 }
 
-async function populateWithResults(fantaBrigade) {
-  let deployments = await Deployment.find({user: fantaBrigade.user});
+async function populateWithResults(fantaBrigade, gameSession) {
+  let deployments = await Deployment.find({user: fantaBrigade.user, gameSession: gameSession});
   for(let deployment of deployments){
     await populateDeploymentWithEpisode(deployment);
   }
