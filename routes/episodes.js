@@ -276,24 +276,26 @@ async function calculateDeploymentResults(deployment, episode) {
     resultsPoint += 10
   }
 
-  //Persona prima nell'invention test
-  const participantWinnerOfInventionTest = episodeDoc.inventionTestPodium.length >= 1
-    ? deploymentDoc.participants.map(x => x.toString()).find(x => x === episodeDoc.inventionTestPodium[0].toString())
-    : null;
-  if (!!participantWinnerOfInventionTest) {
+  //Persona tra i primi nell'invention test
+  const participantsWinnerOfInventionTest = _.intersectionWith(
+    deployment.participants,
+    episode.inventionTestPodium,
+    _.isEqual
+  );
+  for (let participantInInventionTestPodium of participantsWinnerOfInventionTest) {
     results.push({
       type: 'ParticipantWinnerOfInventionTest',
-      participant: mongoose.Types.ObjectId(participantWinnerOfInventionTest),
+      participant: participantInInventionTestPodium,
       value: 10,
-      participantName: (await Participant.findById(mongoose.Types.ObjectId(participantWinnerOfInventionTest))).name
+      participantName: (await Participant.findById(participantInInventionTestPodium)).name
     });
-    resultsPoint += 10
+    resultsPoint += 10;
   }
 
   //Persona vince sia invention test che mystery box
   if (!!participantWinnerOfMysteryBox &&
-    !!participantWinnerOfInventionTest &&
-    participantWinnerOfMysteryBox === participantWinnerOfInventionTest) {
+    !!participantsWinnerOfInventionTest && participantsWinnerOfInventionTest.length > 0 &&
+    participantsWinnerOfInventionTest.indexOf(mongoose.Types.ObjectId(participantWinnerOfMysteryBox)) > -1) {
     results.push({
       type: 'ParticipantWinnerOfMysteryBoxAndInventionTest',
       participant: mongoose.Types.ObjectId(participantWinnerOfMysteryBox),
